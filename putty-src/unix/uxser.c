@@ -321,6 +321,11 @@ static const char *serial_init(void *frontend_handle, void **backend_handle,
     if (err)
 	return err;
 
+    if (conf_get_int(conf, CONF_serautorecon)) {
+        /* Start a timer that periodically checks if the serial port is available */
+        serial->reconnect_timer = schedule_timer(TICKSPERSEC, serial_reconnect_timer, serial);
+    }
+
     *realhost = dupstr(line);
 
     if (!serial_by_fd)
@@ -572,6 +577,26 @@ static int serial_exitcode(void *handle)
 static int serial_cfg_info(void *handle)
 {
     return 0;
+}
+
+/* Timer callback function for auto-reconnection */
+static void serial_reconnect_timer(void *ctx, unsigned long now)
+{
+    Serial serial = (Serial)ctx;
+    int fd;
+    const char *err;
+
+    /* Attempt to reconnect to the serial port */
+    fd = open(serial->line, O_RDWR | O_NOCTTY | O_NDELAY | O_NONBLOCK);
+
+    if (fd >= 0) {
+        /* If the reconnection attempt is successful, stop the timer and configure the serial port */
+        expire_timer_context(serial->reconnect_timer);
+        serial->fd = fd;
+        err = serial_configure(serial, conf);
+        if (err)
+            logevent(serial->frontend, err);
+    }
 }
 
 Backend serial_backend = {

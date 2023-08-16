@@ -954,6 +954,16 @@ DSR/DTR.
 For example, \cq{-sercfg 19200,8,n,1,N} denotes a baud rate of
 19200, 8 data bits, no parity, 1 stop bit and no flow control.
 
+\H{using-autoreconnect} Using auto-reconnection for serial connections
+
+The auto-reconnection feature allows PuTTY to automatically attempt to reconnect to a serial port if the serial port disconnects. This feature is particularly useful for long-running serial connections that may occasionally be interrupted.
+
+To enable or disable the auto-reconnection feature, go to the configuration panel for serial connections and check or uncheck the "Auto-reconnect" checkbox.
+
+When the auto-reconnection feature is enabled, PuTTY will periodically check if the serial port is available and, if it is, attempt to reconnect to it using the same settings previously used to connect to that serial port.
+
+Please note that the auto-reconnection feature may not work if the serial port is being used by another program. Also, while PuTTY will attempt to reconnect to the serial port, it cannot guarantee that the reconnection will always be successful.
+
 \S2{using-cmdline-sshlog} \i\c{-sessionlog}, \i\c{-sshlog},
 \i\c{-sshrawlog}: specify session logging
 
