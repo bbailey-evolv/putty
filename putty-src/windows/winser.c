@@ -258,7 +258,12 @@ static const char *serial_init(void *frontend_handle, void **backend_handle,
 
     err = serial_configure(serial, serport, conf);
     if (err)
-	return err;
+ 	return err;
+ 
+    if (conf_get_int(conf, CONF_serautorecon)) {
+        /* Start a timer that periodically checks if the serial port is available */
+        serial->reconnect_timer = schedule_timer(TICKSPERSEC, serial_reconnect_timer, serial);
+    }
 
     serial->port = serport;
     serial->out = handle_output_new(serport, serial_sentdata, serial,
@@ -339,6 +344,26 @@ static void serbreak_timer(void *ctx, unsigned long now)
 	ClearCommBreak(serial->port);
 	serial->break_in_progress = FALSE;
 	logevent(serial->frontend, "Finished serial break");
+    }
+}
+
+static void serial_reconnect_timer(void *ctx, unsigned long now)
+{
+    Serial serial = (Serial)ctx;
+    HANDLE serport;
+    const char *err;
+
+    /* Attempt to reconnect to the serial port */
+    serport = CreateFile(serial->serline, GENERIC_READ | GENERIC_WRITE, 0, NULL,
+			     OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL);
+
+    if (serport != INVALID_HANDLE_VALUE) {
+        /* If the reconnection attempt is successful, stop the timer and configure the serial port */
+        expire_timer_context(serial->reconnect_timer);
+        serial->port = serport;
+        err = serial_configure(serial, serport, conf);
+        if (err)
+            logevent(serial->frontend, err);
     }
 }
 
