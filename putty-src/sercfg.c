@@ -201,6 +201,8 @@ void ser_setup_config_box(struct controlbox *b, int midsession,
 		  HELPCTX(serial_parity),
 		  serial_parity_handler, I(parity_mask));
     ctrl_droplist(s, "Flow control", 'f', 40,
-		  HELPCTX(serial_flow),
-		  serial_flow_handler, I(flow_mask));
+        		  HELPCTX(serial_flow),
+        		  serial_flow_handler, I(flow_mask));
+    ctrl_checkbox(s, "Auto-reconnect", 'a', HELPCTX(no_help),
+                      conf_checkbox_handler, I(CONF_serautorecon));
 }
